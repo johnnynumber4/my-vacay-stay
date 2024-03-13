@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../../components/Navbar';
-import { connectToDatabase } from '../../util/mongodb';
 
 const EditCondo = ({ initialCondo }) => {
   const router = useRouter();
   const [formData, setFormData] = useState(initialCondo);
+
+  useEffect(() => {
+    // Fetch initial condo data when the component mounts
+    const fetchCondoData = async () => {
+      try {
+        const response = await fetch(`/api/editCondo?id=${router.query.id}`);
+        const condoData = await response.json();
+        setFormData(condoData);
+      } catch (error) {
+        console.error('Error fetching condo data:', error);
+        // Handle error (e.g., show an error message)
+      }
+    };
+
+    fetchCondoData();
+  }, [router.query.id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,12 +29,26 @@ const EditCondo = ({ initialCondo }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { db } = await connectToDatabase();
+    try {
+      const response = await fetch(`/api/editCondo?id=${router.query.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    await db.collection('condos').updateOne({ _id: initialCondo._id }, { $set: formData });
-
-    // Redirect to home page or show a success message
-    router.push('/');
+      if (response.ok) {
+        // Redirect to home page or show a success message
+        router.push('/');
+      } else {
+        console.error('Failed to update condo');
+        // Handle error (e.g., show an error message)
+      }
+    } catch (error) {
+      console.error('Error updating condo:', error);
+      // Handle error (e.g., show an error message)
+    }
   };
 
   return (
@@ -29,18 +58,7 @@ const EditCondo = ({ initialCondo }) => {
         <h1 className="text-2xl font-bold">Edit Condo</h1>
         <form onSubmit={handleSubmit}>
           {/* Add form fields for condo details */}
-          <label>Name:</label>
-          <input type="text" name="Name" value={formData.Name} onChange={handleChange} />
-
-          <label>Building Number:</label>
-          <input type="text" name="BuildingNumber" value={formData.BuildingNumber} onChange={handleChange} />
-
-          <label>Unit Number:</label>
-          <input type="text" name="UnitNumber" value={formData.UnitNumber} onChange={handleChange} />
-
-          <label>Active:</label>
-          <input type="checkbox" name="Active" checked={formData.Active} onChange={handleChange} />
-
+          {/* ... */}
           <button type="submit">Save Changes</button>
         </form>
       </div>
@@ -48,15 +66,11 @@ const EditCondo = ({ initialCondo }) => {
   );
 };
 
-export async function getServerSideProps({ params }) {
-  const { db } = await connectToDatabase();
-  const condo = await db.collection('condos').findOne({ _id: params.id });
+EditCondo.getInitialProps = async ({ query }) => {
+  const response = await fetch(`/api/editCondo?id=${query.id}`);
+  const initialCondo = await response.json();
 
-  return {
-    props: {
-      initialCondo: JSON.parse(JSON.stringify(condo)),
-    },
-  };
-}
+  return { initialCondo };
+};
 
 export default EditCondo;

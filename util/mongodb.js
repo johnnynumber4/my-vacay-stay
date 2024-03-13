@@ -14,14 +14,20 @@ export async function connectToDatabase() {
     return { client: cachedClient, db: cachedDb };
   }
 
-  const client = await MongoClient.connect(MONGODB_URI, { 
-    // useNewUrlParser: true, useUnifiedTopology: true 
-});
+  // Check if the code is running on the server-side
+  if (typeof window === 'undefined') {
+    const client = await MongoClient.connect(MONGODB_URI, {
+      // useNewUrlParser: true, useUnifiedTopology: true
+    });
 
-  const db = await client.db(MONGODB_DB);
+    const db = await client.db(MONGODB_DB);
 
-  cachedClient = client;
-  cachedDb = db;
+    cachedClient = client;
+    cachedDb = db;
 
-  return { client, db };
+    return { client, db };
+  }
+
+  // If the code is running on the client-side, return an error or handle accordingly
+  throw new Error('This code should only be executed on the server-side');
 }

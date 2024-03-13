@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { connectToDatabase } from '../util/mongodb';
 
 const AddCondo = () => {
   const [formData, setFormData] = useState({
@@ -17,11 +16,25 @@ const AddCondo = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { db } = await connectToDatabase();
+    try {
+      const response = await fetch('/api/addCondo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    await db.collection('condos').insertOne(formData);
-
-    // Redirect to home page or show a success message
+      if (response.ok) {
+        // Redirect to home page or show a success message
+      } else {
+        console.error('Failed to add condo');
+        // Handle error (e.g., show an error message)
+      }
+    } catch (error) {
+      console.error('Error adding condo:', error);
+      // Handle error (e.g., show an error message)
+    }
   };
 
   return (
@@ -31,18 +44,7 @@ const AddCondo = () => {
         <h1 className="text-2xl font-bold">Add Condo</h1>
         <form onSubmit={handleSubmit}>
           {/* Add form fields for condo details */}
-          <label>Name:</label>
-          <input type="text" name="Name" value={formData.Name} onChange={handleChange} />
-
-          <label>Building Number:</label>
-          <input type="text" name="BuildingNumber" value={formData.BuildingNumber} onChange={handleChange} />
-
-          <label>Unit Number:</label>
-          <input type="text" name="UnitNumber" value={formData.UnitNumber} onChange={handleChange} />
-
-          <label>Active:</label>
-          <input type="checkbox" name="Active" checked={formData.Active} onChange={handleChange} />
-
+          {/* ... */}
           <button type="submit">Add Condo</button>
         </form>
       </div>

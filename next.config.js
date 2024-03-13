@@ -1,13 +1,18 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+module.exports = {
   future: {
-    webpack5: true,
+    webpack5: true, // by default, if you customize webpack config, they switch back to version 4. 
+      // Looks like backward compatibility approach.
   },
-  styles: {
-    global: '@/styles/globals.css',
-  },
-}
+  webpack(config) {
+    config.resolve.fallback = {
+      ...config.resolve.fallback, // if you miss it, all the other options in fallback, specified
+        // by next.js will be dropped. Doesn't make much sense, but how it is
+      fs: false, // the solution
+      tls: false,
+      dns: false,
+      net: false,
+    };
 
-module.exports = nextConfig
+    return config;
+  },
+};
