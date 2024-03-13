@@ -1,15 +1,20 @@
-// pages/api/addCondo.js
 import { connectToDatabase } from '../../util/mongodb';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { db } = await connectToDatabase();
-      const formData = req.body; // Assuming you send JSON data in the request body
+      const formData = req.body;
 
-      await db.collection('condos').insertOne(formData);
+      // Add validation and any other necessary logic here
+      if (!formData.name || !formData.building_num) {
+        return res.status(400).json({ error: 'Please provide all required fields' });
+      }
 
-      res.status(200).json({ message: 'Condo added successfully' });
+      // Insert the new condo data into the MongoDB collection
+      const result = await db.collection('condos').insertOne(formData);
+
+      res.status(200).json({ message: 'Condo added successfully', condoId: result.insertedId });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
